@@ -20,20 +20,20 @@ class ViewController: UIViewController, UITextFieldDelegate, UITextViewDelegate,
         // Dispose of any resources that can be recreated.
     }
     
-    override func viewWillAppear(animated: Bool) {
+    override func viewWillAppear(_ animated: Bool) {
         super.viewWillDisappear(animated)
         //注册键盘出现通知
-        NSNotificationCenter.defaultCenter().addObserver(self, selector: "keyboardDidShow:", name: UIKeyboardDidShowNotification, object: nil)
+        NotificationCenter.default.addObserver(self, selector: Selector("keyboardDidShow:"), name: NSNotification.Name.UIKeyboardDidShow, object: nil)
         //注册键盘隐藏通知
-        NSNotificationCenter.defaultCenter().addObserver(self, selector: "keyboardDidHide:", name: UIKeyboardDidHideNotification, object: nil)
+        NotificationCenter.default.addObserver(self, selector: Selector("keyboardDidHide:"), name: NSNotification.Name.UIKeyboardDidHide, object: nil)
     }
     
-    override func viewWillDisappear(animated: Bool) {
+    override func viewWillDisappear(_ animated: Bool) {
         super.viewWillDisappear(animated)
         //解除键盘出现通知
-        NSNotificationCenter.defaultCenter().removeObserver(self, name: UIKeyboardDidShowNotification, object: nil)
+        NotificationCenter.default.removeObserver(self, name: NSNotification.Name.UIKeyboardDidShow, object: nil)
         //解除键盘隐藏通知
-        NSNotificationCenter.defaultCenter().removeObserver(self, name: UIKeyboardDidHideNotification, object: nil)
+        NotificationCenter.default.removeObserver(self, name: NSNotification.Name.UIKeyboardDidHide, object: nil)
     }
     //键盘打开时,触发本回调函数
     func keyboardDidShow(notification:NSNotification){
@@ -61,18 +61,18 @@ class ViewController: UIViewController, UITextFieldDelegate, UITextViewDelegate,
     @IBOutlet weak var RightSwitch: UISwitch!
     @IBAction func switchValueChanged(sender: AnyObject) {
         let witchSwitch = sender as! UISwitch
-        let setting = witchSwitch.on
+        let setting = witchSwitch.isOn
         self.LeftSwitch.setOn(setting, animated:true)
         self.RightSwitch.setOn(setting, animated:true)
     }
     //分段控件UISegmented Control
     @IBAction func touchDown(sender: AnyObject) {
-        if self.LeftSwitch.hidden == true{
-            self.LeftSwitch.hidden = false
-            self.RightSwitch.hidden = false
+        if self.LeftSwitch.isHidden == true{
+            self.LeftSwitch.isHidden = false
+            self.RightSwitch.isHidden = false
         }else{
-            self.LeftSwitch.hidden = true
-            self.RightSwitch.hidden = true
+            self.LeftSwitch.isHidden = true
+            self.RightSwitch.isHidden = true
         }
     }
     //滑块控件 UISlider
@@ -86,12 +86,12 @@ class ViewController: UIViewController, UITextFieldDelegate, UITextViewDelegate,
     @IBOutlet weak var webView: UIWebView!
     //本地资源加载: loadHTMLString:baseURL 同步方式
     @IBAction func testLoadHTMLString(sender: AnyObject) {
-        let htmlPath = NSBundle.mainBundle().pathForResource("index", ofType: "html")
-        let bundleUrl = NSURL.fileURLWithPath(NSBundle.mainBundle().bundlePath)
+        let htmlPath = Bundle.main.path(forResource: "index", ofType: "html")
+        let bundleUrl = NSURL.fileURL(withPath: Bundle.main.bundlePath)
         var error:NSError?
         let html:String?
         do{
-            html = try String(contentsOfFile: htmlPath!, encoding: NSUTF8StringEncoding)
+            html = try String(contentsOfFile: htmlPath!, encoding: String.Encoding(rawValue: NSUTF8StringEncoding) ?? String.Encoding(rawValue: 3))
             self.webView.loadHTMLString(html!, baseURL: bundleUrl)
         }catch let error1 as NSError{
             error = error1
@@ -100,23 +100,23 @@ class ViewController: UIViewController, UITextFieldDelegate, UITextViewDelegate,
     }
     //本地资源加载: loadData:MIMEType:textEncodingName:baseURL 同步方式
     @IBAction func testLoadData(sender: AnyObject) {
-        let htmlPath = NSBundle.mainBundle().pathForResource("index", ofType: "html")
-        let bundleUrl = NSURL.fileURLWithPath(NSBundle.mainBundle().bundlePath)
+        let htmlPath = Bundle.main.path(forResource: "index", ofType: "html")
+        let bundleUrl = NSURL.fileURL(withPath: Bundle.main.bundlePath)
         let htmlData = NSData(contentsOfFile: htmlPath!)
-        self.webView.loadData(htmlData!, MIMEType: "text/html", textEncodingName: "UTF-8", baseURL: bundleUrl)
+        self.webView.load(htmlData! as Data, mimeType: "text/html", textEncodingName: "UTF-8", baseURL: bundleUrl)
     }
     //网络资源加载: loadRequest: 异步方式
     @IBAction func testLoadRequest(sender: AnyObject) {
         let url = NSURL(string: "http://www.baidu.com")
-        let request = NSURLRequest(URL: url!)
-        self.webView.loadRequest(request)
+        let request = NSURLRequest(url: url! as URL)
+        self.webView.loadRequest(request as URLRequest)
         self.webView.delegate = self
     }
     //活动指示器 ActivityIndicatorView
-    var timer:NSTimer!
+    var timer:Timer!
     @IBOutlet weak var activityIndicatorView: UIActivityIndicatorView!
     @IBAction func startToMove(sender: AnyObject) {
-        if self.activityIndicatorView.isAnimating(){
+        if self.activityIndicatorView.isAnimating {
             self.activityIndicatorView.stopAnimating()
         }else{
             self.activityIndicatorView.startAnimating()
@@ -127,7 +127,7 @@ class ViewController: UIViewController, UITextFieldDelegate, UITextViewDelegate,
     @IBOutlet weak var myProgressView: UIProgressView!
     @IBAction func downloadProgress(sender: AnyObject) {
         myProgressView.progress = 0.0
-        timer = NSTimer.scheduledTimerWithTimeInterval(1.0, target: self, selector:"download", userInfo:nil, repeats: true)
+        timer = Timer.scheduledTimer(timeInterval: 1.0, target: self, selector:"download", userInfo:nil, repeats: true)
     }
     //计时器回调函数
     func download(){
@@ -150,7 +150,7 @@ class ViewController: UIViewController, UITextFieldDelegate, UITextViewDelegate,
     //构建操作表
     @IBAction func testActionSheet(sender: AnyObject) {
         let actionSheet = UIActionSheet(title: "分享", delegate:  self, cancelButtonTitle: "取消", destructiveButtonTitle: "破坏性按钮", otherButtonTitles: "QQ", "微信", "微博")
-        actionSheet.showInView(self.view)
+        actionSheet.show(in: self.view)
     }
     //实现 UIActionSheetDelegate
     func actionSheet(actionSheet: UIActionSheet, clickedButtonAtIndex buttonIndex: Int) {
@@ -158,40 +158,40 @@ class ViewController: UIViewController, UITextFieldDelegate, UITextViewDelegate,
     }
     // UIAlertController 构建警告框
     @IBAction func testNewAlertView(sender: AnyObject) {
-        let alertController:UIAlertController = UIAlertController(title: "新通知", message: "周末又来了", preferredStyle:  UIAlertControllerStyle.Alert)
-        alertController.addAction(UIAlertAction(title: "NO", style: UIAlertActionStyle.Cancel, handler: {(alertAction)-> Void in
+        let alertController:UIAlertController = UIAlertController(title: "新通知", message: "周末又来了", preferredStyle:  UIAlertControllerStyle.alert)
+        alertController.addAction(UIAlertAction(title: "NO", style: UIAlertActionStyle.cancel, handler: {(alertAction)-> Void in
                                 NSLog("Tap to NO")
         }))
         //尾闭包写法
-        alertController.addAction(UIAlertAction(title: "YES", style: UIAlertActionStyle.Default){(alertAction)->Void in
+        alertController.addAction(UIAlertAction(title: "YES", style: UIAlertActionStyle.default){(alertAction)->Void in
                                 NSLog("Tap to YES")
         })
 //可以添加三个按钮,样式类似 sheet
 //        alertController.addAction(UIAlertAction(title: "YE", style: UIAlertActionStyle.Destructive, handler: {(alertAction)->Void in
 //            NSLog("Tap to YE")
 //        }))
-        self.presentViewController(alertController, animated: true, completion: nil)
+        self.present(alertController, animated: true, completion: nil)
     }
     
     // UIAlertController 构建操作表 ActionSheet
     @IBAction func testNewActionSheet(sender: AnyObject) {
         let actionSheetController:UIAlertController = UIAlertController()
-        actionSheetController.addAction(UIAlertAction(title: "取消", style:  UIAlertActionStyle.Cancel, handler: {(alertAction)->Void in
+        actionSheetController.addAction(UIAlertAction(title: "取消", style:  UIAlertActionStyle.cancel, handler: {(alertAction)->Void in
                 NSLog("Tap 取消按钮")
         }))
-        actionSheetController.addAction(UIAlertAction(title: "破坏性按钮", style:  UIAlertActionStyle.Destructive, handler: {(alertAction)->Void in
+        actionSheetController.addAction(UIAlertAction(title: "破坏性按钮", style:  UIAlertActionStyle.destructive, handler: {(alertAction)->Void in
                 NSLog("Tap 破坏性按钮")
         }))
-        actionSheetController.addAction(UIAlertAction(title: "破坏性按钮2", style:  UIAlertActionStyle.Destructive, handler: {(alertAction)->Void in
+        actionSheetController.addAction(UIAlertAction(title: "破坏性按钮2", style:  UIAlertActionStyle.destructive, handler: {(alertAction)->Void in
             NSLog("Tap 破坏性按钮2")
         }))
-        actionSheetController.addAction(UIAlertAction(title: "新浪", style:  UIAlertActionStyle.Default, handler: {(alertAction)->Void in
+        actionSheetController.addAction(UIAlertAction(title: "新浪", style:  UIAlertActionStyle.default, handler: {(alertAction)->Void in
             NSLog("Tap 新浪按钮")
         }))
-        actionSheetController.addAction(UIAlertAction(title: "QQ", style:  UIAlertActionStyle.Default, handler: {(alertAction)->Void in
+        actionSheetController.addAction(UIAlertAction(title: "QQ", style:  UIAlertActionStyle.default, handler: {(alertAction)->Void in
             NSLog("Tap qq按钮")
         }))
-        self.presentViewController(actionSheetController, animated: true, completion: nil)
+        self.present(actionSheetController, animated: true, completion: nil)
     }
     //工具栏 save 按钮响应函数
     @IBAction func save(sender: AnyObject) {
